@@ -1,209 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Game</title>
-    <link rel="shortcut icon" href="https://telekritika.ua/tk-static/2019/03/krilatyespasateli.jpg">
+    <link
+      rel="shortcut icon"
+      href="https://telekritika.ua/tk-static/2019/03/krilatyespasateli.jpg"
+    />
+  </head>
 
-</head>
-
-<body>
-
-
-
-    <canvas width="1000" height="600" style="border: 3px solid black;">
-
-    </canvas>
+  <body>
+    <canvas width="1000" height="600" style="border: 3px solid black"> </canvas>
 
     <script>
+      const canvas = document.querySelector('canvas');
+      const context = canvas.getContext('2d');
 
-        const canvas = document.querySelector("canvas");
-        const context = canvas.getContext("2d");
+      const backgroundImg = document.createElement('img');
+      const roadImg = document.createElement('img');
+      const heroImg = document.createElement('img');
+      const enemyImg = document.createElement('img');
+      const bulletImg = document.createElement('img');
+      const stabAudio = document.createElement('audio');
+      const audio = document.createElement('audio');
+      backgroundImg.src = 'https://img.freepik.com/free-photo/sunshine-clouds-sky-during-morning-background-blue-white-pastel-heaven-soft-focus-lens-flare-sunlight-abstract-blurred-cyan-gradient-peaceful-nature-open-view-out-windows-beautiful-summer-spring_1253-1093.jpg?size=626&ext=jpg';
+      roadImg.src = 'road.png';
+      heroImg.src = 'https://wiki.altitudegame.com/images/1/1a/Biplane_HD.png';
+      enemyImg.src = 'https://www.pinclipart.com/picdir/big/300-3009885_ufo-clipart-red-png-download.png';
+      bulletImg.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Disc_Plain_red.svg/1024px-Disc_Plain_red.svg.png';
+      stabAudio.src = 'https://soundbible.com//mp3/Stab-SoundBible.com-766875573.mp3';
+      audio.src = 'http://www.slspencer.com/Sounds/Star%20Trek%20Sounds/sounds/PhotonTorp.mp3';
 
-        const backgroundImg = document.createElement("img");
-        backgroundImg.src =
-            "https://img.freepik.com/free-photo/sunshine-clouds-sky-during-morning-background-blue-white-pastel-heaven-soft-focus-lens-flare-sunlight-abstract-blurred-cyan-gradient-peaceful-nature-open-view-out-windows-beautiful-summer-spring_1253-1093.jpg?size=626&ext=jpg";
+      let data = {
+        hero: {
+          xDelta: 0,
+          yDelta: 0,
+          x: 10,
+          y: 380,
+          width: 100,
+          height: 100,
+        },
 
-        const roadImg = document.createElement("img");
-        roadImg.src = "road.png";
+        bullets: [],
+        enemies: [],
+      };
 
+      let score = 0;
 
-        const heroImg = document.createElement("img");
-        heroImg.src = "https://wiki.altitudegame.com/images/1/1a/Biplane_HD.png";
+      function intersect(rect1, rect2) {
+        const x = Math.max(rect1.x, rect2.x),
+          num1 = Math.min(rect1.x + rect1.width, rect2.x + rect2.width),
+          y = Math.max(rect1.y, rect2.y),
+          num2 = Math.min(rect1.y + rect1.height, rect2.y + rect2.height);
+        return num1 >= x && num2 >= y;
+      }
 
-        const enemyImg = document.createElement("img");
-        enemyImg.src =
-            "https://www.pinclipart.com/picdir/big/300-3009885_ufo-clipart-red-png-download.png";
+      function update() {
+        data.hero.x += data.hero.xDelta;
+        data.hero.y += data.hero.yDelta;
 
-        const bulletImg = document.createElement("img");
-        bulletImg.src =
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Disc_Plain_red.svg/1024px-Disc_Plain_red.svg.png";
+        data.enemies.forEach(function (enemy) {
+          if (intersect(enemy, data.hero)) {
+            alert('GAME OVER!!!');
+            data.hero.deleteMe = true;
+            enemy.deleteMe = true;
+            location.reload();
+          }
+        });
 
+        data.bullets.forEach(function (bullet) {
+          data.enemies.forEach(function (enemy) {
+            if (intersect(enemy, bullet)) {
+              stabAudio.currentTime = 0;
+              stabAudio.play();
+              bullet.deleteMe = true;
+              enemy.deleteMe = true;
+              score++;
+            }
+          });
+        });
 
-        const stabAudio = document.createElement("audio");
-        stabAudio.src = "https://soundbible.com//mp3/Stab-SoundBible.com-766875573.mp3";
+        data.bullets = data.bullets.filter(function (bullet) {
+          return bullet.deleteMe !== true;
+        });
 
-        const audio = document.createElement("audio");
-        audio.src =
-            "http://www.slspencer.com/Sounds/Star%20Trek%20Sounds/sounds/PhotonTorp.mp3";
+        data.enemies = data.enemies.filter(function (enemy) {
+          return enemy.deleteMe !== true;
+        });
 
-        let data = {
-            hero: {
-                xDelta: 0,
-                yDelta: 0,
-                x: 10,
-                y: 380,
-                width: 100,
-                height: 100,
-            },
-            bullets: [],
-            enemys: [],
+        data.bullets.forEach(function (bullet) {
+          bullet.x += bullet.xDelta;
+        });
+
+        data.bullets = data.bullets.filter(function (bullet) {
+          if (bullet.x > canvas.width) {
+            return false;
+          }
+
+          return true;
+        });
+
+        data.enemies.forEach(function (enemy) {
+          enemy.x += enemy.xDelta;
+        });
+
+        let enemy = {
+          xDelta: -1.4,
+          x: random(750, canvas.width),
+          y: random(10, canvas.height - 160),
+          width: 60,
+          height: 60,
         };
 
-        let score = 0;
-
-        function intersect(rect1, rect2) {
-            const x = Math.max(rect1.x, rect2.x),
-                num1 = Math.min(rect1.x + rect1.width, rect2.x + rect2.width),
-                y = Math.max(rect1.y, rect2.y),
-                num2 = Math.min(rect1.y + rect1.height, rect2.y + rect2.height);
-            return num1 >= x && num2 >= y;
+        if (data.enemies.length !== 8) {
+          data.enemies.push(enemy);
         }
+      }
 
-        function update() {
-            data.hero.x += data.hero.xDelta;
-            data.hero.y += data.hero.yDelta;
+      function draw() {
+        context.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+        context.drawImage(roadImg, 0, 470, canvas.width, 130);
 
-            data.enemys.forEach(function (enemy) {
-                if (intersect(enemy, data.hero)) {
-                    alert("GAME OVER!!!");
-                    data.hero.deleteMe = true;
-                    enemy.deleteMe = true;
-                    location.reload();
-                }
-            });
+        context.drawImage(
+          heroImg,
+          data.hero.x,
+          data.hero.y,
+          data.hero.width,
+          data.hero.height
+        );
 
-            data.bullets.forEach(function (bullet) {
-                data.enemys.forEach(function (enemy) {
-                    if (intersect(enemy, bullet)) {
-                        stabAudio.currentTime = 0;
-                        stabAudio.play();
-                        bullet.deleteMe = true;
-                        enemy.deleteMe = true;
-                        score++;
-                    }
-                });
-            });
-
-            data.bullets = data.bullets.filter(function (bullet) {
-                return bullet.deleteMe !== true;
-            });
-
-            data.enemys = data.enemys.filter(function (enemy) {
-                return enemy.deleteMe !== true;
-            });
-
-            data.bullets.forEach(function (bullet) {
-                bullet.x += bullet.xDelta;
-            });
-
-            data.bullets = data.bullets.filter(function (bullet) {
-                if (bullet.x > canvas.width) {
-                    return false;
-                }
-                return true;
-            });
-
-            data.enemys.forEach(function (enemy) {
-                enemy.x += enemy.xDelta;
-            });
-
-            let enemy = {
-                xDelta: -1.4,
-                x: random(750, canvas.width),
-                y: random(10, canvas.height - 160),
-                width: 60,
-                height: 60,
-            };
-
-            if (data.enemys.length !== 8) {
-                data.enemys.push(enemy);
-            }
-
-
-        }
-
-        function draw() {
-            context.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
-            context.drawImage(roadImg, 0, 470, canvas.width, 130);
-
-            context.drawImage(
-                heroImg,
-                data.hero.x,
-                data.hero.y,
-                data.hero.width,
-                data.hero.height
-            );
-
-            data.bullets.forEach(function (bullet) {
-                context.drawImage(
-                    bulletImg,
-                    bullet.x,
-                    bullet.y,
-                    bullet.width,
-                    bullet.height
-                );
-            });
-
-            data.enemys.forEach(function (enemy) {
-                context.drawImage(enemyImg, enemy.x, enemy.y, enemy.width, enemy.height);
-            });
-
-            context.fillStyle = "#000";
-            context.font = "30px Verdana";
-            context.fillText("SCORE: " + score, 10, canvas.height - 20);
-        }
-
-        function loop() {
-            requestAnimationFrame(loop);
-            update();
-            draw();
-        }
-
-        loop();
-
-        document.addEventListener("keydown", function (evt) {
-            if (evt.code === "ArrowRight") {
-                data.hero.xDelta = 5;
-            } else if (evt.code === "ArrowLeft") {
-                data.hero.xDelta = -5;
-            } else if (evt.code === "ArrowDown") {
-                data.hero.yDelta = 10;
-            } else if (evt.code === "ArrowUp") {
-                data.hero.yDelta = -10;
-            } else {
-                audio.currentTime = 0;
-                audio.play();
-                data.bullets.push({
-                    xDelta: 5,
-                    x: data.hero.x + data.hero.width,
-                    y: data.hero.y + data.hero.height / 2,
-                    width: 20,
-                    height: 20,
-                });
-            }
-        });
-        document.addEventListener("keyup", function (evt) {
-            data.hero.xDelta = 0;
-            data.hero.yDelta = 0.1;
+        data.bullets.forEach(function (bullet) {
+          context.drawImage(
+            bulletImg,
+            bullet.x,
+            bullet.y,
+            bullet.width,
+            bullet.height
+          );
         });
 
-        function random(min, max) {
-            return Math.floor(Math.random() * (max - min)) + min;
+        data.enemies.forEach(function (enemy) {
+          context.drawImage(
+            enemyImg,
+            enemy.x,
+            enemy.y,
+            enemy.width,
+            enemy.height
+          );
+        });
+
+        context.fillStyle = '#000';
+        context.font = '30px Verdana';
+        context.fillText('SCORE: ' + score, 10, canvas.height - 20);
+      }
+
+      function loop() {
+        requestAnimationFrame(loop);
+        update();
+        draw();
+      }
+
+      loop();
+
+      document.addEventListener('keydown', function (evt) {
+        if (evt.code === 'ArrowRight') {
+          data.hero.xDelta = 5;
+        } else if (evt.code === 'ArrowLeft') {
+          data.hero.xDelta = -5;
+        } else if (evt.code === 'ArrowDown') {
+          data.hero.yDelta = 10;
+        } else if (evt.code === 'ArrowUp') {
+          data.hero.yDelta = -10;
+        } else {
+          audio.currentTime = 0;
+          audio.play();
+          data.bullets.push({
+            xDelta: 5,
+            x: data.hero.x + data.hero.width,
+            y: data.hero.y + data.hero.height / 2,
+            width: 20,
+            height: 20,
+          });
         }
+      });
+
+      document.addEventListener('keyup', function (evt) {
+        data.hero.xDelta = 0;
+        data.hero.yDelta = 0.1;
+      });
+
+      function random(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+      }
+
     </script>
-</body>
-
+  </body>
 </html>
